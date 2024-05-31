@@ -1,16 +1,16 @@
 import express from "express";
 import firebaseConn from "../config/dbConnect";
-import { UserRepositoryImpl } from "../repositories/UserRepository";
-import { UserServiceImpl } from "../services/UserService";
-import { UserControllerImpl } from "../controllers/UserController";
+import { UserTestRepositoryImpl } from "../repositories/UserTestRepository";
+import { UserTestServiceImpl } from "../services/UserTestService";
+import { UserTestControllerImpl } from "../controllers/UserTestController";
 
 const router = express.Router();
 const db = firebaseConn.getFirestoreDB();
 
-const userRepo: UserRepositoryImpl = new UserRepositoryImpl(db);
-const userService: UserServiceImpl = new UserServiceImpl(userRepo);
-const userController: UserControllerImpl = new UserControllerImpl(userService);
+const userTestRepo: UserTestRepositoryImpl = new UserTestRepositoryImpl(db);
+const userTestService: UserTestServiceImpl = new UserTestServiceImpl(userTestRepo);
+const userTestController: UserTestControllerImpl = new UserTestControllerImpl(userTestService);
 
-router.post("/create-user", userController.createUser.bind(userController));
+router.post("/create-user", userTestController.createUser.bind(userTestController));
 
 export default router;

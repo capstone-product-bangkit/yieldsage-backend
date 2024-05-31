@@ -1,19 +1,19 @@
 import { addDoc, collection, Firestore, DocumentReference, getDoc } from "firebase/firestore";
-import UserEntity from "../entities/UserEntity";
+import UserTestEntity from "../entities/UserTestEntity";
 
 
-interface UserRepository {
-  createUser(user: UserEntity): Promise<UserEntity | undefined>;
+interface UserTestRepository {
+  createUser(user: UserTestEntity): Promise<UserTestEntity | undefined>;
 };
 
-class UserRepositoryImpl implements UserRepository {
+class UserTestRepositoryImpl implements UserTestRepository {
   private db: Firestore;
 
   constructor(database: Firestore) {
     this.db = database;
   }
 
-  async createUser(user: UserEntity): Promise<UserEntity | undefined> {
+  async createUser(user: UserTestEntity): Promise<UserTestEntity | undefined> {
     try {
       if (!user.email || !user.password) {
         return undefined;
@@ -30,7 +30,7 @@ class UserRepositoryImpl implements UserRepository {
 
       if (docSnapshot.exists()) {
         const data = docSnapshot.data();
-        return new UserEntity(data.email, data.password);
+        return new UserTestEntity(data.email, data.password);
        }
     } catch (error: any) {
       return undefined;
@@ -39,6 +39,6 @@ class UserRepositoryImpl implements UserRepository {
 }
 
 export {
-  UserRepositoryImpl,
-  UserRepository,
+  UserTestRepositoryImpl,
+  UserTestRepository,
 };

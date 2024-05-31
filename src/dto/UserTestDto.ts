@@ -1,11 +1,11 @@
 
-const USER_DTO = {
+const USER_TEST_DTO = {
   MESSAGE_CREATE_USER_SUCCESS: 'User created successfully',
   MESSAGE_CREATE_USER_ERROR: 'Please provide an email and a password!',  
 };
 
 
-class UserRequest {
+class UserTestRequest {
   email: string;
   password: string;
 
@@ -15,7 +15,7 @@ class UserRequest {
   }
 }
 
-class UserResponse { 
+class UserTestResponse { 
   email: string;
   password?: string;
 
@@ -26,7 +26,7 @@ class UserResponse {
 }
 
 export {
-  UserRequest,
-  UserResponse,
-  USER_DTO,
+  UserTestRequest,
+  UserTestResponse,
+  USER_TEST_DTO,
 };

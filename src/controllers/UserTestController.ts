@@ -1,19 +1,19 @@
 import firebaseConn from "../config/dbConnect";
 import { Response, Request } from "express";
 import { getFirestore, doc, setDoc, addDoc, collection, getDocs, query, Firestore } from "firebase/firestore";
-import { UserService } from "../services/UserService";
-import { UserRequest } from "../dto/UserDto";
+import { UserTestService } from "../services/UserTestService";
+import { UserTestRequest } from "../dto/UserTestDto";
 
 
-interface UserController {
+interface UserTestController {
   createUser(req: Request, res: Response): Promise<Response | any>;
 }
 
-class UserControllerImpl implements UserController {
-  private userService: UserService;
+class UserTestControllerImpl implements UserTestController {
+  private userTestService: UserTestService;
 
-  constructor(userService: UserService) {
-    this.userService = userService;
+  constructor(userTestService: UserTestService) {
+    this.userTestService = userTestService;
   }
 
   async createUser(req: Request, res: Response): Promise<Response | any> {
@@ -26,8 +26,8 @@ class UserControllerImpl implements UserController {
         });
       }
 
-      const userEntity = new UserRequest(user.email, user.password);
-      const response = await this.userService.createUser(userEntity);
+      const userEntity = new UserTestRequest(user.email, user.password);
+      const response = await this.userTestService.createUser(userEntity);
 
       if (response !== undefined) {
         return res.status(200).send({
@@ -75,4 +75,4 @@ class UserControllerImpl implements UserController {
 
   
 
-export { UserController, UserControllerImpl };
+export { UserTestController, UserTestControllerImpl };
