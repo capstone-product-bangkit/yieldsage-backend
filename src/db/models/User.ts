@@ -7,6 +7,7 @@ interface UserAttributes {
   email: string;
   password?: string | null;
   phone_number?: string | null;
+  accessToken?: string | null;
 
   createdAt?: Date;
   updatedAt?: Date;
@@ -25,6 +26,7 @@ class User extends Model<UserAttributes, UserInput> implements UserAttributes {
   public email!: string;
   public password!: string;
   public phone_number!: string;
+  public accessToken!: string;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -51,6 +53,10 @@ User.init({
   },
   phone_number: {
     type: DataTypes.STRING,
+    allowNull: true,
+  },
+  accessToken: {
+    type: DataTypes.TEXT,
     allowNull: true,
   },
 }, {
