@@ -1,10 +1,8 @@
-import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import dotenv from "dotenv";
 import { google } from "googleapis";
 import { UserService } from "../services/UserService";
-import { UserRequest } from "../dto/UserDto";
-import jwt from "jsonwebtoken";
+import { USER_DTO, UserRequest } from "../dto/UserDto";
 import { PasswordHelper } from "../helpers/PasswordHelper";
 import Helper from "../helpers/Helper";
 
@@ -41,10 +39,10 @@ class AuthControllerImpl {
   }
 
   async googleAuth(req: Request, res: Response): Promise<Response | any> {
-    return res.status(200).send({
-      message: "Redirecting to Google Login",
+    const data = {
       url: authorizationUrl,
-    });
+    }
+    return res.status(200).send(Helper.ResponseData(200, USER_DTO.MESSAGE_REDIRECT, data, null));
   }
 
   async googleLogin(req: Request, res: Response): Promise<Response | any> {
@@ -61,9 +59,7 @@ class AuthControllerImpl {
       const { data } = await oauth2.userinfo.get();
 
       if (!data.email || !data.name) {
-        return res.status(400).send({
-          message: "Failed to get user info",
-        });
+        return res.status(400).send(Helper.ResponseData(400, USER_DTO.MESSAGE_GET_USER_ERROR, null, null));
       }
 
       // check data user in database mysql seauelize
@@ -88,26 +84,19 @@ class AuthControllerImpl {
       const updateToken = await this.userService.updateAccessToken(email, token);
 
       if (updateToken === undefined) {
-        return res.status(500).send({
-          message: "Failed to update token",
-        });
+        return res.status(500).send(Helper.ResponseData(500, USER_DTO.MESSAGE_TOKEN_ERROR, null, null));
       }
 
+      const responseData = {
+        token,
+        refreshToken,
+        user,
+      };
 
-      return res.json({
-        message: "Login success",
-        data: {
-          token,
-          refreshToken,
-          user,
-        },
-      });
+      return res.status(200).send(Helper.ResponseData(200, USER_DTO.MESSAGE_LOGIN_SUCCESS, responseData, null));
 
     } catch (error: any) {
-      res.status(500).send({
-        message: error.message,
-        data: error,
-      });
+      return res.status(500).send(Helper.ResponseData(500, error.message, null, error));
     }
   }
 }
