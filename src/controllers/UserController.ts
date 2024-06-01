@@ -1,4 +1,4 @@
-import { UserRequest } from "../dto/UserDto";
+import { USER_DTO, UserRequest } from "../dto/UserDto";
 import Helper from "../helpers/Helper";
 import { PasswordHelper } from "../helpers/PasswordHelper";
 import { UserService } from "../services/UserService";
@@ -22,17 +22,13 @@ class UserControllerImpl implements UserController {
       const {name, email, password, phone_number} = req.body;
 
       if (!email || !password) {
-        return res.status(400).send({
-          message: "Please provide an email and a password!",
-        });
+        return res.status(400).send(Helper.ResponseData(400, USER_DTO.MESSAGE_CRED_ERROR, null, null));
       }
 
       let check = await this.userService.getUserByEmail(email);
 
       if (check !== undefined) {
-        return res.status(400).send({
-          message: "User already exist!",
-        });
+        return res.status(400).send(Helper.ResponseData(400, USER_DTO.MESSAGE_USER_EXIST, null, null));
       }
 
       const hashPassword = await PasswordHelper.hash(password);
@@ -42,22 +38,13 @@ class UserControllerImpl implements UserController {
       const response = await this.userService.createUser(user);
 
       if (response !== undefined) {
-        return res.status(201).send({
-          message: "User created successfully!",
-          data: response,
-        });
+        return res.status(201).send(Helper.ResponseData(201, USER_DTO.MESSAGE_CREATE_USER_SUCCESS, response, null));
       }
 
-
-      res.status(500).send({
-        message: "Failed to create user!",
-      });
+      return res.status(500).send(Helper.ResponseData(500, USER_DTO.MESSAGE_FAILED_CREATE_USER, null, null));
 
     } catch (error: any) {
-      res.status(500).send({
-        message: error.message,
-        data: error,
-      });
+      return res.status(500).send(Helper.ResponseData(500, error.message, null, error));
     }
   }
   
@@ -66,33 +53,25 @@ class UserControllerImpl implements UserController {
       const { email, password } = req.body;
 
       if (!email || !password) {
-        return res.status(400).send({
-          message: "Please provide an email or phone number and a password!",
-        });
+        return res.status(400).send(Helper.ResponseData(400, USER_DTO.MESSAGE_CRED_ERROR, null, null));
       }
 
       const user = await this.userService.getUserByEmail(email);
 
       if (user === undefined) {
-        return res.status(401).send({
-          message: "UNAUTHORIZED",
-        });
+        return res.status(401).send(Helper.ResponseData(401, USER_DTO.MESSAGE_UNAUTHORIZED, null, null));
       }
 
       const userPassword = await this.userService.getUserPasswordByEmail(email);
 
       if (userPassword === undefined) {
-        return res.status(401).send({
-          message: "UNAUTHORIZED",
-        });
+        return res.status(401).send(Helper.ResponseData(401, USER_DTO.MESSAGE_UNAUTHORIZED, null, null));
       }
 
       const isPasswordValid = await PasswordHelper.compare(password, userPassword);
 
       if (!isPasswordValid) {
-        return res.status(400).send({
-          message: "INVALID PASSWORD",
-        });
+        return res.status(400).send(Helper.ResponseData(400, USER_DTO.MESSAGE_INVALID_PASSWORD, null, null));
       }
 
       const dataUser = {
@@ -106,25 +85,19 @@ class UserControllerImpl implements UserController {
       const updateToken = await this.userService.updateAccessToken(email, token);
 
       if (updateToken === undefined) {
-        return res.status(500).send({
-          message: "Failed to update token!",
-        });
+        return res.status(500).send(Helper.ResponseData(500, USER_DTO.MESSAGE_TOKEN_ERROR, null, null));
       }
 
-      return res.status(200).send({
-        message: "Login success",
-        data: {
-          token,
-          refreshToken,
-          user: dataUser,
-        },
-      });
+      const responseData = {
+        token,
+        refreshToken,
+        user: dataUser,
+      };
+
+      return res.status(200).send(Helper.ResponseData(200, USER_DTO.MESSAGE_LOGIN_SUCCESS, responseData, null));
 
     } catch (error: any) {
-      res.status(500).send({
-        message: error.message,
-        data: error,
-      });
+      return res.status(500).send(Helper.ResponseData(500, USER_DTO.MESSAGE_LOGIN_ERROR, null, error));
     }
   }
 
@@ -135,21 +108,19 @@ class UserControllerImpl implements UserController {
       const check = await this.userService.getUserByEmail(user.email);
 
       if (check === undefined) {
-        return res.status(401).send({
-          message: "UNAUTHORIZE!",
-        });
+        return res.status(401).send(Helper.ResponseData(401, USER_DTO.MESSAGE_UNAUTHORIZED, null, null));
       }
 
-      return res.status(200).send({
-        message: "User data",
-        data: user,
-      });
+      const responseData =
+      {
+        name: check.name,
+        email: check.email,
+      };
+
+      return res.status(200).send(Helper.ResponseData(200, USER_DTO.MESSAGE_GET_USER_SUCCESS, responseData, null));
 
     } catch (error: any) {
-      res.status(500).send({
-        message: error.message,
-        data: error,
-      });
+      return res.status(500).send(Helper.ResponseData(500, USER_DTO.MESSAGE_GET_USER_ERROR, null, error));
     }
   }
 }
