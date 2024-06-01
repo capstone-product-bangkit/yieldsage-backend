@@ -76,3 +76,5 @@ npx sequelize-cli seed:generate --name UserSeeder
 ```
 npx sequelize-cli db:seed all
 ```
+
+### 

@@ -1,5 +1,7 @@
 'use strict';
 
+const { PasswordHelper } = require('../../helpers/PasswordHelper');
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
@@ -15,7 +17,7 @@ module.exports = {
     await queryInterface.bulkInsert('Users', [{
       name: 'John Doe',
       email: 'johndoe@gmail.com',
-      password: bcrypt.hashSync('password', 10),
+      password: PasswordHelper.hash('password'),
       phone_number: '081234567890',
       createdAt: new Date(),
       updatedAt: new Date(),

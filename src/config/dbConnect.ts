@@ -42,6 +42,7 @@ const dbDialect = "mysql";
 const sequelizeConnection = new Sequelize(dbName, dbUser, dbPassword, {
   host: dbHost,
   dialect: dbDialect,
+  logging: console.log,
 });
 
 export default {
