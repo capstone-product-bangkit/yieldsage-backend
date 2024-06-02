@@ -1,5 +1,5 @@
 
-class UserEntity {
+class UserTestEntity {
   email: string;
   password: string;
 
@@ -9,4 +9,4 @@ class UserEntity {
   }
 }
 
-export default UserEntity;
+export default UserTestEntity;

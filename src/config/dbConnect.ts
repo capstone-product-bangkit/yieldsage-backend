@@ -1,10 +1,11 @@
 import { FirebaseApp, initializeApp } from "firebase/app";
 import dotenv from "dotenv";
 import { getFirestore, Firestore } from "firebase/firestore";
-
+import { Sequelize } from "sequelize";
 
 dotenv.config();
 
+// Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
   authDomain: process.env.FIREBASE_AUTH_DOMAIN,
@@ -31,7 +32,21 @@ const getFirestoreDB = (): Firestore => {
   return firestoreDB;
 };
 
+// MySQL connection
+const dbName = process.env.DB_NAME as string;
+const dbUser = process.env.DB_USER as string;
+const dbPassword = process.env.DB_PASSWORD as string;
+const dbHost = process.env.DB_HOST;
+const dbDialect = "mysql";
+
+const sequelizeConnection = new Sequelize(dbName, dbUser, dbPassword, {
+  host: dbHost,
+  dialect: dbDialect,
+  logging: console.log,
+});
+
 export default {
   getFirestoreDB,
-  initializeFirebaseApp
+  initializeFirebaseApp,
+  sequelizeConnection
 }

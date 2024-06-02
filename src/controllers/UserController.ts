@@ -1,13 +1,14 @@
-import firebaseConn from "../config/dbConnect";
-import { Response, Request } from "express";
-import { getFirestore, doc, setDoc, addDoc, collection, getDocs, query, Firestore } from "firebase/firestore";
+import { USER_DTO, UserRequest } from "../dto/UserDto";
+import Helper from "../helpers/Helper";
+import { PasswordHelper } from "../helpers/PasswordHelper";
 import { UserService } from "../services/UserService";
-import { UserRequest } from "../dto/UserDto";
-
+import { Request, Response } from "express";
 
 interface UserController {
-  createUser(req: Request, res: Response): Promise<Response | any>;
-}
+  register(req: Request, res: Response): Promise<Response>;
+  login(req: Request, res: Response): Promise<Response>;
+  getMe(req: Request, res: Response): Promise<Response>;
+};
 
 class UserControllerImpl implements UserController {
   private userService: UserService;
@@ -16,63 +17,115 @@ class UserControllerImpl implements UserController {
     this.userService = userService;
   }
 
-  async createUser(req: Request, res: Response): Promise<Response | any> {
+  async register(req: Request, res: Response): Promise<Response | any> {
     try {
-      const user = req.body;
+      const {name, email, password, phone_number} = req.body;
 
-      if (!user.email || !user.password) {
-        return res.status(400).send({
-          message: "Please provide an email and a password!",
-        });
+      if (!email || !password) {
+        return res.status(400).send(Helper.ResponseData(400, USER_DTO.MESSAGE_CRED_ERROR, null, null));
       }
 
-      const userEntity = new UserRequest(user.email, user.password);
-      const response = await this.userService.createUser(userEntity);
+      let check = await this.userService.getUserByEmail(email);
+
+      if (check !== undefined) {
+        return res.status(400).send(Helper.ResponseData(400, USER_DTO.MESSAGE_USER_EXIST, null, null));
+      }
+
+      const hashPassword = await PasswordHelper.hash(password);
+
+      const user = new UserRequest(name, email, hashPassword, phone_number);
+
+      const response = await this.userService.createUser(user);
 
       if (response !== undefined) {
-        return res.status(200).send({
-          message: "User created successfully!",
-          data: response,
-        });
+        return res.status(201).send(Helper.ResponseData(201, USER_DTO.MESSAGE_CREATE_USER_SUCCESS, response, null));
       }
-      
+
+      return res.status(500).send(Helper.ResponseData(500, USER_DTO.MESSAGE_FAILED_CREATE_USER, null, null));
+
     } catch (error: any) {
-      res.status(500).send({
-        message: error.message,
-        data: error,
-      });
+      return res.status(500).send(Helper.ResponseData(500, error.message, null, error));
+    }
+  }
+  
+  async login(req: Request, res: Response): Promise<Response | any> {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).send(Helper.ResponseData(400, USER_DTO.MESSAGE_CRED_ERROR, null, null));
+      }
+
+      const user = await this.userService.getUserByEmail(email);
+
+      if (user === undefined) {
+        return res.status(401).send(Helper.ResponseData(401, USER_DTO.MESSAGE_UNAUTHORIZED, null, null));
+      }
+
+      const userPassword = await this.userService.getUserPasswordByEmail(email);
+
+      if (userPassword === undefined) {
+        return res.status(401).send(Helper.ResponseData(401, USER_DTO.MESSAGE_UNAUTHORIZED, null, null));
+      }
+
+      const isPasswordValid = await PasswordHelper.compare(password, userPassword);
+
+      if (!isPasswordValid) {
+        return res.status(400).send(Helper.ResponseData(400, USER_DTO.MESSAGE_INVALID_PASSWORD, null, null));
+      }
+
+      const dataUser = {
+        name: user.name,
+        email: user.email,
+      };
+
+      const token = Helper.GenerateToken(dataUser);
+      const refreshToken = Helper.GenerateRefreshToken(dataUser);
+      
+      const updateToken = await this.userService.updateAccessToken(email, token);
+
+      if (updateToken === undefined) {
+        return res.status(500).send(Helper.ResponseData(500, USER_DTO.MESSAGE_TOKEN_ERROR, null, null));
+      }
+
+      const responseData = {
+        token,
+        refreshToken,
+        user: dataUser,
+      };
+
+      return res.status(200).send(Helper.ResponseData(200, USER_DTO.MESSAGE_LOGIN_SUCCESS, responseData, null));
+
+    } catch (error: any) {
+      return res.status(500).send(Helper.ResponseData(500, USER_DTO.MESSAGE_LOGIN_ERROR, null, error));
+    }
+  }
+
+  async getMe(req: Request, res: Response): Promise<Response | any> {
+    try {
+      const user = res.locals.user;
+
+      const check = await this.userService.getUserByEmail(user.email);
+
+      if (check === undefined) {
+        return res.status(401).send(Helper.ResponseData(401, USER_DTO.MESSAGE_UNAUTHORIZED, null, null));
+      }
+
+      const responseData =
+      {
+        name: check.name,
+        email: check.email,
+      };
+
+      return res.status(200).send(Helper.ResponseData(200, USER_DTO.MESSAGE_GET_USER_SUCCESS, responseData, null));
+
+    } catch (error: any) {
+      return res.status(500).send(Helper.ResponseData(500, USER_DTO.MESSAGE_GET_USER_ERROR, null, error));
     }
   }
 }
-  // const db = getFirestore();
 
-// const createUser = async (req: Request, res: Response): Promise<Response | any> => { 
-//   try {
-//     const user = req.body;
-//     console.log(user);
-//     if (!user.email || !user.password) {
-//       return res.status(400).send({
-//         message: "Please provide an email and a password!",
-//       });
-//     }
-//     const docRef = await addDoc(collection(db, 'users'), user)
-
-
-//     return res.status(200).send({
-//       message: "User created successfully!",
-//       data: docRef.id,
-//     });
-//   } catch (error: any) {
-//     res.status(500).send({
-//       message: error.message,
-//     });
-//   }
-// };
-
-// export default {
-//   createUser,
-// };
-
-  
-
-export { UserController, UserControllerImpl };
+export {
+  UserController,
+  UserControllerImpl
+};

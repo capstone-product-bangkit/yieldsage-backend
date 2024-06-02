@@ -1,44 +1,96 @@
-import { addDoc, collection, Firestore, DocumentReference, getDoc } from "firebase/firestore";
-import UserEntity from "../entities/UserEntity";
-
+import User from "../db/models/User";
+import { UserEntity } from "../entities/UserEntitty";
+import { PasswordHelper } from "../helpers/PasswordHelper";
+import connection from "../config/dbConnect";
 
 interface UserRepository {
   createUser(user: UserEntity): Promise<UserEntity | undefined>;
-};
+  getUserByEmail(email: string): Promise<UserEntity | undefined>;
+  getUserPasswordByEmail(email: string): Promise<string | undefined>;
+  updateAccessToken(email: string, accessToken: string): Promise<UserEntity | undefined>;
+}
 
 class UserRepositoryImpl implements UserRepository {
-  private db: Firestore;
-
-  constructor(database: Firestore) {
-    this.db = database;
-  }
 
   async createUser(user: UserEntity): Promise<UserEntity | undefined> {
     try {
-      if (!user.email || !user.password) {
+      if (!user.email || !user.password || !user.phone_number || !user.name) {
         return undefined;
       }
-
-      const userData = {
+      
+      const newUser = await User.create({
         email: user.email,
         password: user.password,
-      }
+        phone_number: user.phone_number,
+        name: user.name
+      });
 
-      const docRef: DocumentReference = await addDoc(collection(this.db, 'users'), userData);
-
-      const docSnapshot = await getDoc(docRef);
-
-      if (docSnapshot.exists()) {
-        const data = docSnapshot.data();
-        return new UserEntity(data.email, data.password);
-       }
+      return new UserEntity(newUser.name, newUser.email, newUser.password, newUser.phone_number);
+      
     } catch (error: any) {
       return undefined;
     }
   }
-}
+
+  async getUserByEmail(email: string): Promise<UserEntity | undefined> {
+    try {
+      if (!email) {
+        return undefined;
+      }
+
+      const user = await User.findOne({ where: { email } });
+
+      if (!user) {
+        return undefined;
+      }
+
+      return new UserEntity(user.name, user.email, user.password, user.phone_number);
+    } catch (error: any) {
+      return undefined;
+    }
+  }
+
+  async getUserPasswordByEmail(email: string): Promise<string | undefined> {
+    try {
+      if (!email) {
+        return undefined;
+      }
+
+      const user = await User.findOne({ where: { email } });
+
+      if (!user) {
+        return undefined;
+      }
+
+      return user.password;
+
+    } catch (error: any) {
+      return undefined;
+    }
+  }
+
+  async updateAccessToken(email: string, accessToken: string): Promise<UserEntity | undefined> {
+
+    try {
+      if (!email) {
+        return undefined;
+      }
+      const user = await User.findOne({ where: { email } });
+      if (!user) {
+        return undefined;
+      }
+      user.accessToken = accessToken;
+      await user.save();
+      return new UserEntity(user.email, user.password, user.phone_number, user.name);
+
+    } catch (error: any) {
+      console.error("Error occurred after raw query execution:", error.message, error);
+      return undefined;
+    }
+  }
+};
 
 export {
-  UserRepositoryImpl,
   UserRepository,
+  UserRepositoryImpl,
 };
