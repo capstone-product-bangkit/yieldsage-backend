@@ -2,6 +2,7 @@ import { FirebaseApp, initializeApp } from "firebase/app";
 import dotenv from "dotenv";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { Sequelize } from "sequelize";
+import { getStorage, ref, uploadBytes, getDownloadURL, FirebaseStorage } from "firebase/storage";
 
 dotenv.config();
 
@@ -17,12 +18,14 @@ const firebaseConfig = {
 
 let app: FirebaseApp;
 let firestoreDB: Firestore;
+let storage: ReturnType<typeof getStorage>;
 
 const initializeFirebaseApp = () => {
   try {
     console.log("Initializing Firebase app...");
     app = initializeApp(firebaseConfig);
     firestoreDB = getFirestore();
+    storage = getStorage(app);
   } catch (error: any) {
     throw new Error(`Error initializing Firebase app: ${error.message}`);
   }
@@ -31,6 +34,10 @@ const initializeFirebaseApp = () => {
 const getFirestoreDB = (): Firestore => {
   return firestoreDB;
 };
+
+const getStorageInstance = (): FirebaseStorage => {
+  return storage;
+}
 
 // MySQL connection
 const dbName = process.env.DB_NAME as string;
@@ -48,5 +55,6 @@ const sequelizeConnection = new Sequelize(dbName, dbUser, dbPassword, {
 export default {
   getFirestoreDB,
   initializeFirebaseApp,
-  sequelizeConnection
+  sequelizeConnection,
+  getStorageInstance,
 }

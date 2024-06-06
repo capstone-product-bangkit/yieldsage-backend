@@ -77,6 +77,7 @@ class UserControllerImpl implements UserController {
       const dataUser = {
         name: user.name,
         email: user.email,
+        user_id: user.user_id,
       };
 
       const token = Helper.GenerateToken(dataUser);

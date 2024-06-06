@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { ProjectService } from "../services/ProjectService";
-import { ProjectRequest } from "../dto/ProjectDto";
+import { GetProjectbyID, ProjectRequest } from "../dto/ProjectDto";
 import Helper from "../helpers/Helper";
 
 
@@ -26,7 +26,7 @@ class ProjectControllerImpl implements ProjectController {
       }
 
       const user_id = res.locals.user.user_id;
-      const project_request = new ProjectRequest(user_id, name, description, null);
+      const project_request = new ProjectRequest(name, user_id, description, null);
       const response = await this.projectService.createProject(project_request);
 
       if (response !== undefined) {
@@ -42,13 +42,14 @@ class ProjectControllerImpl implements ProjectController {
   async getProjectById(req: Request, res: Response): Promise<Response> {
     try {
       const id: string = req.params.id as string;
-      console.log('id', id);
 
       if (!id) {
         return res.status(400).send(Helper.ResponseData(400, 'Project id is required!', null, null));
       }
 
-      const response = await this.projectService.getProjectById(id);
+      const projetCred = new GetProjectbyID(id, res.locals.user.user_id);
+
+      const response = await this.projectService.getProjectById(projetCred);
 
       if (response !== undefined) {
         return res.status(200).send(Helper.ResponseData(200, 'Get project success', null, response));
@@ -62,7 +63,8 @@ class ProjectControllerImpl implements ProjectController {
 
   async getProjects(req: Request, res: Response): Promise<Response> {
     try {
-      const response = await this.projectService.getProjects();
+      const user_id: string = res.locals.user.user_id;  
+      const response = await this.projectService.getProjects(user_id);
 
       if (response !== undefined) {
         return res.status(200).send(Helper.ResponseData(200, 'Get projects success', null, response));
