@@ -19,13 +19,14 @@ class UserRepositoryImpl implements UserRepository {
       }
       
       const newUser = await User.create({
+        id: user.user_id as string, 
         email: user.email,
         password: user.password,
         phone_number: user.phone_number,
         name: user.name
       });
 
-      return new UserEntity(newUser.name, newUser.email, newUser.password, newUser.phone_number);
+      return new UserEntity(user.user_id, newUser.name, newUser.email, newUser.password, newUser.phone_number);
       
     } catch (error: any) {
       return undefined;
@@ -44,7 +45,7 @@ class UserRepositoryImpl implements UserRepository {
         return undefined;
       }
 
-      return new UserEntity(user.name, user.email, user.password, user.phone_number);
+      return new UserEntity(user.id, user.name, user.email, user.password, user.phone_number);
     } catch (error: any) {
       return undefined;
     }
@@ -81,7 +82,7 @@ class UserRepositoryImpl implements UserRepository {
       }
       user.accessToken = accessToken;
       await user.save();
-      return new UserEntity(user.email, user.password, user.phone_number, user.name);
+      return new UserEntity(user.id, user.email, user.password, user.phone_number, user.name);
 
     } catch (error: any) {
       console.error("Error occurred after raw query execution:", error.message, error);

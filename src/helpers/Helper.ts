@@ -5,6 +5,7 @@ dotenv.config();
 interface UserData {
   name: string | null,
   email: string | null,
+  user_id: string | null, 
 }
 
 const ResponseData = (status: number, message: any, error: any | null, data: any | null) => {

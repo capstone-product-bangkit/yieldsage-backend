@@ -38,7 +38,7 @@ class UserControllerImpl implements UserController {
       const response = await this.userService.createUser(user);
 
       if (response !== undefined) {
-        return res.status(201).send(Helper.ResponseData(201, USER_DTO.MESSAGE_CREATE_USER_SUCCESS, response, null));
+        return res.status(201).send(Helper.ResponseData(201, USER_DTO.MESSAGE_CREATE_USER_SUCCESS, null, response));
       }
 
       return res.status(500).send(Helper.ResponseData(500, USER_DTO.MESSAGE_FAILED_CREATE_USER, null, null));

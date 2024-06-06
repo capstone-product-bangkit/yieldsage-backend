@@ -31,10 +31,12 @@ class UserRequest {
 
 class UserResponse {
   name: string;
+  user_id: string;
   email: string;
 
-  constructor(name: string, email: string) {
+  constructor(user_id: string, name: string, email: string) {
     this.name = name;
+    this.user_id = user_id;
     this.email = email;
   }
 };

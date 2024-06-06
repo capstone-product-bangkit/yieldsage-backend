@@ -75,6 +75,7 @@ class AuthControllerImpl {
       const payload = {
         email: user?.email,
         name: user?.name,
+        user_id: user?.user_id,
       };
 
 

@@ -1,6 +1,8 @@
 import { UserRequest, UserResponse } from "../dto/UserDto";
 import { UserEntity } from "../entities/UserEntitty";
 import { UserRepository } from "../repositories/UserRepository";
+import { v4 as uuidv4 } from 'uuid';
+
 
 interface UserService { 
   createUser(user: UserRequest): Promise<UserResponse | undefined>;
@@ -17,12 +19,14 @@ class UserServiceImpl implements UserService {
   }
 
   async createUser(user: UserRequest): Promise<UserResponse | undefined> {
-    const userData = new UserEntity(user.name, user.email, user.password, user.phone_number);
+    const user_id = uuidv4();
+
+    const userData = new UserEntity(user_id, user.name, user.email, user.password, user.phone_number);
 
     const response = await this.userRepository.createUser(userData);
 
     if (response !== undefined) {
-      return new UserResponse(response!.name, response!.email);
+      return new UserResponse(response!.user_id, response!.name, response!.email);
     }
     
     return undefined;
@@ -32,7 +36,7 @@ class UserServiceImpl implements UserService {
     const response = await this.userRepository.getUserByEmail(email);
 
     if (response !== undefined) {
-      return new UserResponse(response!.name, response!.email);
+      return new UserResponse(response!.user_id ,response!.name, response!.email);
     }
 
     return undefined;
@@ -46,7 +50,7 @@ class UserServiceImpl implements UserService {
     const response = await this.userRepository.updateAccessToken(email, accessToken);
 
     if (response !== undefined) {
-      return new UserResponse(response!.name, response!.email);
+      return new UserResponse(response!.user_id ,response!.name, response!.email);
     }
 
     return undefined;
