@@ -19,6 +19,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
 const db = firebaseConn.getFirestoreDB();
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 const userTestRepo: UserTestRepositoryImpl = new UserTestRepositoryImpl(db);
 const userTestService: UserTestServiceImpl = new UserTestServiceImpl(userTestRepo);
@@ -48,28 +50,7 @@ router.post("/projects", AuthenticateJwt, projectController.createProject.bind(p
 router.get("/projects/:id", AuthenticateJwt, projectController.getProjectById.bind(projectController));
 router.get("/projects", AuthenticateJwt, projectController.getProjects.bind(projectController));
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-router.post('/upload', AuthenticateJwt, upload.single('image'), async (req: Request, res: Response) => {
-  try {
-    if(!req.file) {
-      return res.status(400).send('No file uploaded.');
-    }
 
-    const storageInstance = firebaseConn.getStorageInstance();
-    const storageRef = ref(storageInstance, `images/${uuidv4()}_${req.file.originalname}`);
-
-    await uploadBytes(storageRef, req.file.buffer, {
-      contentType: req.file.mimetype
-    });
-
-    const publicUrl = await getDownloadURL(storageRef);
-
-    res.status(200).send(publicUrl);
-
-  } catch(  error: any) {
-    return res.status(500).send(error.message);
-  }
-});
+router.post('/projects/upload/:id', AuthenticateJwt, upload.single('image'), projectController.uploadImageProject.bind(projectController));
 
 export default router;

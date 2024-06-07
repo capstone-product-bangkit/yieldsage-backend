@@ -1,4 +1,4 @@
-import { GetProjectbyID, ProjectRequest, ProjectResponse } from "../dto/ProjectDto";
+import { GetProjectbyID, ProjectRequest, ProjectResponse, UploadImageProject } from "../dto/ProjectDto";
 import { ProjectEntity } from "../entities/ProjectEntity";
 import { ProjectRepository } from "../repositories/Projectrepository";
 import { v4 as uuidv4 } from 'uuid';
@@ -8,6 +8,7 @@ interface ProjectService {
   createProject(project: ProjectRequest): Promise<ProjectResponse | undefined>;
   getProjectById(projectCred: GetProjectbyID): Promise<ProjectResponse | undefined>;
   getProjects(user_id: string): Promise<Array<ProjectResponse> | undefined>;
+  uploadImageProject(imageCred: UploadImageProject): Promise<ProjectResponse | undefined>;
 }
 
 class ProjectServiceImpl implements ProjectService{
@@ -40,6 +41,14 @@ class ProjectServiceImpl implements ProjectService{
     const projects = await this.projectRepository.getProjects(user_id);
     if (projects) {
       return projects.map(project => new ProjectResponse(project.id, project.user_id, project.name, project.description, project.image_content));
+    }
+    return undefined;
+  }
+
+  async uploadImageProject(imageCred: UploadImageProject): Promise<ProjectResponse | undefined> { 
+    const project = await this.projectRepository.uploadImageProject(imageCred);
+    if (project) {
+      return new ProjectResponse(project.id, project.user_id, project.name, project.description, project.image_content);
     }
     return undefined;
   }

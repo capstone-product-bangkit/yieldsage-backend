@@ -11,9 +11,9 @@ class ProjectRequest {
   name: string;
   user_id: string;
   description: string;
-  image_content: Array<ProjectImageContentEntity> | null;
+  image_content: Array<ProjectImageContent> | [];
 
-  constructor(name: string, user_id: string, description: string, image_content: Array<ProjectImageContentEntity> | null) {
+  constructor(name: string, user_id: string, description: string, image_content: Array<ProjectImageContent> | []) {
     this.name = name;
     this.user_id = user_id;
     this.description = description;
@@ -27,9 +27,9 @@ class ProjectResponse {
   user_id: string;
   name: string;
   description: string;
-  image_content: Array<ProjectImageContentEntity> | null;
+  image_content: Array<ProjectImageContent> | [];
 
-  constructor(id: string, user_id: string, name: string, description: string, image_content: Array<ProjectImageContentEntity> | null) {
+  constructor(id: string, user_id: string, name: string, description: string, image_content: Array<ProjectImageContent> | []) {
     this.id = id;
     this.user_id = user_id;
     this.name = name;
@@ -60,10 +60,32 @@ class UploadImageProject {
   }
 }
 
+interface ProjectData {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string;
+  image_content: ProjectImageContent[];
+}
+
+interface ProjectImageContent {
+  id: string | null;
+  total_yield: number | null;
+  age_average: number | null;
+  cpa_average: number | null;
+  yield_individual: Array<number> | [];
+  age_individual: Array<number> | [];
+  cpa_individual: Array<number> | [];
+  tree_count: number | null;
+  imageUrl: string | null;
+}
+
 export {
   ProjectRequest,
   ProjectResponse,
   PROJECT_DTO,
   GetProjectbyID,
-  UploadImageProject
+  UploadImageProject,
+  ProjectData,
+  ProjectImageContent
 }

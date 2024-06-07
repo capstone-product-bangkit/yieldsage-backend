@@ -2,19 +2,29 @@ import { Request, Response } from "express";
 import { ProjectService } from "../services/ProjectService";
 import { GetProjectbyID, ProjectRequest } from "../dto/ProjectDto";
 import Helper from "../helpers/Helper";
+import multer from "multer";
+import { FirebaseStorage } from "firebase/storage";
+import firebaseConn from "../config/dbConnect";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { v4 as uuidv4 } from 'uuid';
+
+
 
 
 interface ProjectController {
   createProject(project: Request, res: Response): Promise<Response>;
   getProjectById(req: Request, res: Response): Promise<Response>;
   getProjects(req: Request, res: Response): Promise<Response>;
+  uploadImageProject(req: Request, res: Response): Promise<Response>;
 }
 
 class ProjectControllerImpl implements ProjectController {
   private projectService: ProjectService;
+  private storageInstace: FirebaseStorage;
 
   constructor(projectService: ProjectService) {
     this.projectService = projectService;
+    this.storageInstace = firebaseConn.getStorageInstance();
   }
 
   async createProject(project: Request, res: Response): Promise<Response> {
@@ -26,7 +36,7 @@ class ProjectControllerImpl implements ProjectController {
       }
 
       const user_id = res.locals.user.user_id;
-      const project_request = new ProjectRequest(name, user_id, description, null);
+      const project_request = new ProjectRequest(name, user_id, description, []);
       const response = await this.projectService.createProject(project_request);
 
       if (response !== undefined) {
@@ -73,6 +83,37 @@ class ProjectControllerImpl implements ProjectController {
       return res.status(404).send(Helper.ResponseData(404, 'Get projects failed', null, null));
     } catch (error: any) {
       return res.status(500).send(Helper.ResponseData(500, 'Get projects failed', null, error));
+    }
+  }
+
+  async uploadImageProject(req: Request, res: Response): Promise<Response> { 
+    try {
+      if (!req.file) {
+        return res.status(400).send(Helper.ResponseData(400, 'No file uploaded', null, null));
+      }
+
+      const storageRef = ref(this.storageInstace, `images/${uuidv4()}_${req.file.originalname}`);
+      
+      await uploadBytes(storageRef, req.file.buffer, {
+        contentType: req.file.mimetype
+      });
+
+      const publicUrl = await getDownloadURL(storageRef);
+
+      const response = await this.projectService.uploadImageProject({
+        project_id: req.params.id as string,
+        user_id: res.locals.user.user_id,
+        image_url: publicUrl
+      });
+
+      if (response !== undefined) {
+        return res.status(200).send(Helper.ResponseData(200, 'Upload image project success', null, response));
+      }
+
+      return res.status(500).send(Helper.ResponseData(500, 'Upload image project failed', null, null));
+
+    } catch (error: any) {
+      return res.status(500).send(Helper.ResponseData(500, 'Upload image project failed', null, error));
     }
   }
 }
