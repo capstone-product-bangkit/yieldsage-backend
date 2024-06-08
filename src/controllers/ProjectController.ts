@@ -16,6 +16,7 @@ interface ProjectController {
   getProjectById(req: Request, res: Response): Promise<Response>;
   getProjects(req: Request, res: Response): Promise<Response>;
   uploadImageProject(req: Request, res: Response): Promise<Response>;
+  predictProject(req: Request, res: Response): Promise<Response>;
 }
 
 class ProjectControllerImpl implements ProjectController {
@@ -114,6 +115,26 @@ class ProjectControllerImpl implements ProjectController {
 
     } catch (error: any) {
       return res.status(500).send(Helper.ResponseData(500, 'Upload image project failed', null, error));
+    }
+  }
+
+  async predictProject(req: Request, res: Response): Promise<Response> {
+    try {
+      const user_id = res.locals.user.user_id;
+      const id = req.params.id as string;
+
+      const predictData = new GetProjectbyID(id, user_id);
+
+      const response = await this.projectService.predictProject(predictData);
+
+      if (!response) {
+        return res.status(500).send(Helper.ResponseData(500, 'Predict project failed', null, null));
+      }
+
+      return res.status(200).send(Helper.ResponseData(200, 'Predict project success', null, response));
+
+    } catch (error: any) {
+      return res.status(500).send(Helper.ResponseData(500, 'Predict project failed', null, error));
     }
   }
 }

@@ -3,6 +3,10 @@ import { addDoc, collection, Firestore, getDoc, doc, getDocs, query, where, setD
 import { v4 as uuidv4 } from 'uuid';
 import { GetProjectbyID, UploadImageProject, ProjectData, ProjectImageContent } from "../dto/ProjectDto";
 import { ProjectImageContentEntity } from "../entities/ProjectImageContentEntity";
+import axios from "axios";
+import firebaseConn from "../config/dbConnect";
+import { FirebaseStorage } from "firebase/storage";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 
 interface ProjectRepository {
@@ -10,10 +14,12 @@ interface ProjectRepository {
   getProjectById(projectCred: GetProjectbyID): Promise<ProjectEntity | undefined> ;
   getProjects(user_id: string): Promise<Array<ProjectEntity> | undefined>;
   uploadImageProject(imageCred: UploadImageProject): Promise<ProjectEntity | undefined>;
+  predictProject(projectCred: GetProjectbyID): Promise<ProjectEntity | any | undefined>;
 }
 
 class ProjectRepositoryImpl implements ProjectRepository {
   private db: Firestore;
+  private storageInstace: FirebaseStorage;
   id?: string;
   total_yield?: number;
   age_average?: number;
@@ -26,6 +32,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
 
   constructor(database: Firestore) {
     this.db = database;
+    this.storageInstace = firebaseConn.getStorageInstance();
   }
 
   serialize(image: ProjectImageContent): any{
@@ -192,6 +199,89 @@ class ProjectRepositoryImpl implements ProjectRepository {
       console.error("Error updating project:", error);
       return undefined;
     }
+  }
+
+  async predictProject(projectCred: GetProjectbyID): Promise<ProjectEntity | any | undefined> {
+    try {
+      if (!projectCred.id || !projectCred.user_id) {
+        return undefined;
+      }
+  
+      const project = await this.getProjectById(projectCred);
+  
+      if (!project) {
+        return undefined;
+      }
+      
+      const imageContent = project.image_content;
+
+      const imageUrls = imageContent.map((image) => image.imageUrl);
+      console.log(imageUrls);
+
+      const response = await axios.post('http://localhost:8000/predict', {
+        imageUrls: imageUrls
+      }); 
+
+      const datas = response.data;
+      const imagesData = datas.images;
+
+      let downloadsUrls: string[] = [];
+
+      const uploadPromises = Object.entries(imagesData).map(async ([filename, base64Data]) => {
+        const buffer = Buffer.from(base64Data as string, 'base64');
+        const storageRef = ref(this.storageInstace, `images/${uuidv4()}_${filename}`);
+        
+        await uploadBytes(storageRef, buffer, {
+          contentType: 'image/png'
+        });
+
+        const publicUrl = await getDownloadURL(storageRef);
+        downloadsUrls.push(publicUrl);
+      });
+
+      await Promise.all(uploadPromises);
+
+      console.log(downloadsUrls);
+
+      const projectDatas: ProjectImageContent[] = imageContent.map((image, index) => {
+        return {
+          id: uuidv4(),
+          total_yield: null,
+          age_average: null,
+          cpa_average: null,
+          yield_individual: [],
+          age_individual: [],
+          cpa_individual: datas.predictionResults[index],
+          tree_count: null,
+          imageUrl: downloadsUrls[index],
+        };
+      });
+
+      const predictionRef = collection(this.db, 'prediction');
+
+      const projectData = {
+        id: uuidv4(),
+        user_id: project.user_id,
+        name: project.name,
+        description: project.description,
+        image_content: projectDatas,
+      }
+
+      const docRef = await addDoc(predictionRef, projectData);
+
+      const docSnapshot = await getDoc(docRef);
+
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        return new ProjectEntity(data.id, data.user_id, data.name, data.description, data.image_content);
+      }
+
+      return undefined;
+  
+    } catch (error: any) {
+      return undefined;
+    }
+  
   }
 
 }

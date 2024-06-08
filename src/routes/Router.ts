@@ -49,8 +49,7 @@ router.get("/me", AuthenticateJwt, userController.getMe.bind(userController));
 router.post("/projects", AuthenticateJwt, projectController.createProject.bind(projectController));
 router.get("/projects/:id", AuthenticateJwt, projectController.getProjectById.bind(projectController));
 router.get("/projects", AuthenticateJwt, projectController.getProjects.bind(projectController));
-
-
 router.post('/projects/upload/:id', AuthenticateJwt, upload.single('image'), projectController.uploadImageProject.bind(projectController));
+router.post('/projects/predict/:id', AuthenticateJwt, projectController.predictProject.bind(projectController));
 
 export default router;

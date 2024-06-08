@@ -9,6 +9,7 @@ interface ProjectService {
   getProjectById(projectCred: GetProjectbyID): Promise<ProjectResponse | undefined>;
   getProjects(user_id: string): Promise<Array<ProjectResponse> | undefined>;
   uploadImageProject(imageCred: UploadImageProject): Promise<ProjectResponse | undefined>;
+  predictProject(projectCred: GetProjectbyID): Promise<ProjectResponse | any | undefined>;
 }
 
 class ProjectServiceImpl implements ProjectService{
@@ -51,6 +52,20 @@ class ProjectServiceImpl implements ProjectService{
       return new ProjectResponse(project.id, project.user_id, project.name, project.description, project.image_content);
     }
     return undefined;
+  }
+
+  async predictProject(projectCred: GetProjectbyID): Promise<ProjectResponse | any | undefined>{
+    try {
+      const project = await this.projectRepository.predictProject(projectCred);
+      if (!project) {
+        return undefined;
+      }
+
+      // return new ProjectResponse(project.id, project.user_id, project.name, project.description, project.image_content);
+      return project;
+    } catch (error: any) {
+      return undefined;
+    }
   }
 }
 
