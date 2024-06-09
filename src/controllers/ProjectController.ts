@@ -21,11 +21,9 @@ interface ProjectController {
 
 class ProjectControllerImpl implements ProjectController {
   private projectService: ProjectService;
-  private storageInstace: FirebaseStorage;
 
   constructor(projectService: ProjectService) {
     this.projectService = projectService;
-    this.storageInstace = firebaseConn.getStorageInstance();
   }
 
   async createProject(project: Request, res: Response): Promise<Response> {
@@ -93,18 +91,10 @@ class ProjectControllerImpl implements ProjectController {
         return res.status(400).send(Helper.ResponseData(400, 'No file uploaded', null, null));
       }
 
-      const storageRef = ref(this.storageInstace, `images/${uuidv4()}_${req.file.originalname}`);
-      
-      await uploadBytes(storageRef, req.file.buffer, {
-        contentType: req.file.mimetype
-      });
-
-      const publicUrl = await getDownloadURL(storageRef);
-
       const response = await this.projectService.uploadImageProject({
         project_id: req.params.id as string,
         user_id: res.locals.user.user_id,
-        image_url: publicUrl
+        image: req.file
       });
 
       if (response !== undefined) {

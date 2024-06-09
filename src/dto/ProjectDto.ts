@@ -51,12 +51,12 @@ class GetProjectbyID {
 class UploadImageProject {
   user_id: string;
   project_id: string;
-  image_url: string;
+  image: Express.Multer.File;
 
-  constructor(user_id: string, project_id: string, image_url: string) {
+  constructor(user_id: string, project_id: string, image: Express.Multer.File) {
     this.user_id = user_id;
     this.project_id = project_id;
-    this.image_url = image_url;
+    this.image = image;
   }
 }
 

@@ -21,9 +21,9 @@ class UserControllerImpl implements UserController {
     try {
       const {name, email, password, phone_number} = req.body;
 
-      if (!email || !password) {
+      if (!email || !password || !name || !phone_number) {
         return res.status(400).send(Helper.ResponseData(400, USER_DTO.MESSAGE_CRED_ERROR, null, null));
-      }
+      } 
 
       let check = await this.userService.getUserByEmail(email);
 

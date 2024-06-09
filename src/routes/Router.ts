@@ -52,4 +52,9 @@ router.get("/projects", AuthenticateJwt, projectController.getProjects.bind(proj
 router.post('/projects/upload/:id', AuthenticateJwt, upload.single('image'), projectController.uploadImageProject.bind(projectController));
 router.post('/projects/predict/:id', AuthenticateJwt, projectController.predictProject.bind(projectController));
 
+// route exception for all method for route not found
+router.all("*", (req: Request, res: Response) => {
+  return res.status(404).send("Route not found");
+});
+
 export default router;

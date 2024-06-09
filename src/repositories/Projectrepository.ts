@@ -7,6 +7,11 @@ import axios from "axios";
 import firebaseConn from "../config/dbConnect";
 import { FirebaseStorage } from "firebase/storage";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import dotenv from "dotenv";
+import multer from "multer";
+
+
+dotenv.config();  
 
 
 interface ProjectRepository {
@@ -20,15 +25,6 @@ interface ProjectRepository {
 class ProjectRepositoryImpl implements ProjectRepository {
   private db: Firestore;
   private storageInstace: FirebaseStorage;
-  id?: string;
-  total_yield?: number;
-  age_average?: number;
-  cpa_average?: number;
-  yield_individual?: Array<number>;
-  age_individual?: Array<number>;
-  cpa_individual?: Array<number>;
-  tree_count?: number;
-  imageUrl?: string;
 
   constructor(database: Firestore) {
     this.db = database;
@@ -124,19 +120,26 @@ class ProjectRepositoryImpl implements ProjectRepository {
 
   async uploadImageProject(imageCred: UploadImageProject): Promise<ProjectEntity | undefined> {
     try {
-      if (!imageCred.project_id || !imageCred.user_id || !imageCred.image_url) {
+      if (!imageCred.project_id || !imageCred.user_id || !imageCred.image) {
         return undefined;
       }
-  
-      const project = await this.getProjectById(new GetProjectbyID(imageCred.project_id, imageCred.user_id));
 
-      console.log(project!.image_content); 
+      const project = await this.getProjectById(new GetProjectbyID(imageCred.project_id, imageCred.user_id));
 
       // create array of objects
       const imageContent = project!.image_content.map((image) => this.serialize(image));
+      const imageFile = imageCred.image;
+      const storageRef = ref(this.storageInstace, `images/${uuidv4()}_${imageFile.originalname}`);
 
-      console.log(imageContent);
+      await uploadBytes(storageRef, imageFile.buffer, {
+        contentType: imageFile.mimetype
+      });
 
+      const publicUrl = await getDownloadURL(storageRef);
+
+      if (!publicUrl) {
+        return undefined;
+      }
   
       if (!project) {
         return undefined;
@@ -152,7 +155,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
         age_individual: [],
         cpa_individual: [],
         tree_count:  null,
-        imageUrl: imageCred.image_url,
+        imageUrl: publicUrl,
       };
 
       imageContent.push(this.serialize(projectDatas));
@@ -216,9 +219,10 @@ class ProjectRepositoryImpl implements ProjectRepository {
       const imageContent = project.image_content;
 
       const imageUrls = imageContent.map((image) => image.imageUrl);
-      console.log(imageUrls);
 
-      const response = await axios.post('http://localhost:8000/predict', {
+      console.log("Predicting...", process.env.FLASK_URL);
+
+      const response = await axios.post(`${process.env.FLASK_URL}/predict`, {
         imageUrls: imageUrls
       }); 
 
@@ -240,8 +244,6 @@ class ProjectRepositoryImpl implements ProjectRepository {
       });
 
       await Promise.all(uploadPromises);
-
-      console.log(downloadsUrls);
 
       const projectDatas: ProjectImageContent[] = imageContent.map((image, index) => {
         return {

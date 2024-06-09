@@ -26,7 +26,7 @@ const ResponseData = (status: number, message: any, error: any | null, data: any
 };
 
 const GenerateToken = (data: any): string => {
-  return jwt.sign(data, process.env.JWT_SECRET as string, { expiresIn: '15m' });
+  return jwt.sign(data, process.env.JWT_SECRET as string, { expiresIn: '1d' });
 }
 
 const GenerateRefreshToken = (data: any): string => {
