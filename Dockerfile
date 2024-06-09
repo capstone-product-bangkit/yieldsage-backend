@@ -1,11 +1,13 @@
 # Use Node.js 14 LTS as base image
-FROM node:14
+FROM node:18
 
 # Set working directory inside the container
 WORKDIR /usr/src/app
 
 # Copy package.json and package-lock.json to container
 COPY package*.json ./
+
+COPY .env .env
 
 # Install dependencies
 RUN npm install
@@ -20,7 +22,7 @@ RUN npm run build
 RUN npm run migrate
 
 # Expose port
-EXPOSE 8080
+EXPOSE 5000
 
 # Command to run the application
 CMD ["npm", "start"]
