@@ -9,6 +9,7 @@ import { FirebaseStorage } from "firebase/storage";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import dotenv from "dotenv";
 import multer from "multer";
+import { YieldCalculation } from "../utils/YieldCalculation";
 
 
 dotenv.config();  
@@ -226,6 +227,8 @@ class ProjectRepositoryImpl implements ProjectRepository {
         imageUrls: imageUrls
       }); 
 
+      console.log("Response from Flask API:", response.data);
+
       const datas = response.data;
       const imagesData = datas.images;
 
@@ -245,19 +248,30 @@ class ProjectRepositoryImpl implements ProjectRepository {
 
       await Promise.all(uploadPromises);
 
+
       const projectDatas: ProjectImageContent[] = imageContent.map((image, index) => {
+        const yieldCalculation = new YieldCalculation(datas.predictionResults[index]);
+        const treeCount = yieldCalculation.treecount();
+        const total_yield = yieldCalculation.totalYield();
+        const age_individual = yieldCalculation.calculateIndividualAge();
+        const age_average = yieldCalculation.calculateAgeAverage(age_individual);
+        const cpa_average = yieldCalculation.calculateCPAAverage();
+        const yield_individual = yieldCalculation.calculateIndividialYield();
+
         return {
           id: uuidv4(),
-          total_yield: null,
-          age_average: null,
-          cpa_average: null,
-          yield_individual: [],
-          age_individual: [],
+          total_yield: total_yield,
+          age_average: age_average,
+          cpa_average: cpa_average,
+          yield_individual: yield_individual,
+          age_individual: age_individual,
           cpa_individual: datas.predictionResults[index],
-          tree_count: null,
+          tree_count: treeCount,
           imageUrl: downloadsUrls[index],
         };
       });
+
+      console.log("Project Data:", projectDatas);
 
       const predictionRef = collection(this.db, 'prediction');
 
