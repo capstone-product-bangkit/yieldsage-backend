@@ -1,3 +1,4 @@
+
 # Use Node.js 14 LTS as base image
 FROM node:18
 
@@ -9,7 +10,7 @@ COPY package*.json ./
 
 COPY .env .env
 
-#RUN cat .env
+# RUN cat .env
 
 # Install dependencies
 RUN npm install
@@ -24,7 +25,7 @@ RUN npm run build
 RUN npm run migrate
 
 # Expose port
-EXPOSE 8989
+EXPOSE 8080
 
 # Command to run the application
 CMD ["npm", "start"]

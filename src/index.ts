@@ -19,9 +19,9 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use(router);
 
-const port: number = parseInt(process.env.APP_PORT || '8989');
+const port: number = parseInt(process.env.PORT || '8080');
 const host: string = '0.0.0.0';
 
-app.listen(8989, host, () => {
+app.listen(port, host, () => {
   console.log(`Server is running on port ${port}`);
 });

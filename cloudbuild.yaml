@@ -1,0 +1,19 @@
+steps:
+  # Step 1: Install dependencies
+  - name: 'gcr.io/cloud-builders/npm'
+    args: ['install']
+
+  # Step 2: Compile TypeScript code
+  - name: 'gcr.io/cloud-builders/npm'
+    args: ['run', 'build']
+
+  # Step 3: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'asia-southeast2-docker.pkg.dev/capstone-project-yielsage/yieldsage-repo/yieldsage-backend', '.']
+
+  # Step 4: Push the Docker image to Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia-southeast2-docker.pkg.dev/capstone-project-yielsage/yieldsage-repo/yieldsage-backend']
+
+images:
+  - 'asia-southeast2-docker.pkg.dev/capstone-project-yielsage/yieldsage-repo/yieldsage-backend'
