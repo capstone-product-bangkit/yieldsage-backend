@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 # Copy package.json and package-lock.json to container
 COPY package*.json ./
 
-COPY .env .env
+# COPY .env .env
 
 # RUN cat .env
 
@@ -22,7 +22,7 @@ COPY . .
 RUN npm run build
 
 # Run database migrations
-RUN npm run migrate
+# RUN npm run migrate
 
 # Expose port
 EXPOSE 8080
