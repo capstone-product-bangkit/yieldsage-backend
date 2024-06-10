@@ -9,6 +9,8 @@ COPY package*.json ./
 
 COPY .env .env
 
+RUN cat .env
+
 # Install dependencies
 RUN npm install
 
@@ -19,7 +21,7 @@ COPY . .
 RUN npm run build
 
 # Run database migrations
-RUN npm run migrate
+# RUN npm run migrate
 
 # Expose port
 EXPOSE 5000
