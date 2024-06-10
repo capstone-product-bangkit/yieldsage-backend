@@ -19,6 +19,9 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use(router);
 
-app.listen(process.env.APP_PORT || 5000, () => {
-  console.log(`Server is running on port ${process.env.APP_PORT}`);
+const port: number = parseInt(process.env.APP_PORT || '8989');
+const host: string = '0.0.0.0';
+
+app.listen(port, host, () => {
+  console.log(`Server is running on port ${port}`);
 });
