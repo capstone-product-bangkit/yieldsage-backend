@@ -22,6 +22,6 @@ app.use(router);
 const port: number = parseInt(process.env.APP_PORT || '8989');
 const host: string = '0.0.0.0';
 
-app.listen(port, host, () => {
+app.listen(8989, host, () => {
   console.log(`Server is running on port ${port}`);
 });
