@@ -26,7 +26,7 @@ class UserServiceImpl implements UserService {
     const response = await this.userRepository.createUser(userData);
 
     if (response !== undefined) {
-      return new UserResponse(response!.user_id, response!.name, response!.email);
+      return new UserResponse(response!.user_id, response!.name, response!.email, response!.phone_number);
     }
     
     return undefined;
@@ -36,7 +36,7 @@ class UserServiceImpl implements UserService {
     const response = await this.userRepository.getUserByEmail(email);
 
     if (response !== undefined) {
-      return new UserResponse(response!.user_id ,response!.name, response!.email);
+      return new UserResponse(response!.user_id ,response!.name, response!.email, response!.phone_number);
     }
 
     return undefined;
@@ -50,7 +50,7 @@ class UserServiceImpl implements UserService {
     const response = await this.userRepository.updateAccessToken(email, accessToken);
 
     if (response !== undefined) {
-      return new UserResponse(response!.user_id ,response!.name, response!.email);
+      return new UserResponse(response!.user_id ,response!.name, response!.email, response!.phone_number);
     }
 
     return undefined;

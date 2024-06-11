@@ -33,11 +33,13 @@ class UserResponse {
   name: string;
   user_id: string;
   email: string;
+  phone_number: string;
 
-  constructor(user_id: string, name: string, email: string) {
+  constructor(user_id: string, name: string, email: string, phone_number: string) {
     this.name = name;
     this.user_id = user_id;
     this.email = email;
+    this.phone_number = phone_number;
   }
 };
 
