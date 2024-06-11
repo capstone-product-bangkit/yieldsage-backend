@@ -33,7 +33,7 @@ class ProjectControllerImpl implements ProjectController {
       const { name, description } = project.body;
 
       if (!name || !description) {
-        return res.status(400).send(Helper.ResponseData(400, 'Name and description are required!', null, null));
+        return res.status(400).send(Helper.ResponseData(400, 'Name and description are required!', true, null));
       }
 
       const user_id = res.locals.user.user_id;
@@ -41,12 +41,12 @@ class ProjectControllerImpl implements ProjectController {
       const response = await this.projectService.createProject(project_request);
 
       if (response !== undefined) {
-        return res.status(201).send(Helper.ResponseData(201, 'Project created successfully', null, response));
+        return res.status(201).send(Helper.ResponseData(201, 'Project created successfully', false, response));
       }
 
-      return res.status(500).send(Helper.ResponseData(500, 'Failed to create project!', null, null));
+      return res.status(500).send(Helper.ResponseData(500, 'Failed to create project!', true, null));
     } catch (error: any) {
-      return res.status(500).send(Helper.ResponseData(500, 'Failed to create project!', null, error));
+      return res.status(500).send(Helper.ResponseData(500, 'Failed to create project!', true, error));
     }
   }
 
@@ -55,7 +55,7 @@ class ProjectControllerImpl implements ProjectController {
       const id: string = req.params.id as string;
 
       if (!id) {
-        return res.status(400).send(Helper.ResponseData(400, 'Project id is required!', null, null));
+        return res.status(400).send(Helper.ResponseData(400, 'Project id is required!', true, null));
       }
 
       const projetCred = new GetProjectbyID(id, res.locals.user.user_id);
@@ -63,12 +63,12 @@ class ProjectControllerImpl implements ProjectController {
       const response = await this.projectService.getProjectById(projetCred);
 
       if (response !== undefined) {
-        return res.status(200).send(Helper.ResponseData(200, 'Get project success', null, response));
+        return res.status(200).send(Helper.ResponseData(200, 'Get project success', false, response));
       }
 
-      return res.status(404).send(Helper.ResponseData(404, 'Get project failed', null, null));
+      return res.status(404).send(Helper.ResponseData(404, 'Get project failed', true, null));
     } catch (error: any) {
-      return res.status(500).send(Helper.ResponseData(500, 'Get project failed', null, error));
+      return res.status(500).send(Helper.ResponseData(500, 'Get project failed', true, error));
     }
   }
 
@@ -77,7 +77,7 @@ class ProjectControllerImpl implements ProjectController {
       const id: string = req.params.id as string;
 
       if (!id) {
-        return res.status(400).send(Helper.ResponseData(400, 'Result id is required!', null, null));
+        return res.status(400).send(Helper.ResponseData(400, 'Result id is required!', true, null));
       }
 
       const projetCred = new GetProjectbyID(id, res.locals.user.user_id);
@@ -85,12 +85,12 @@ class ProjectControllerImpl implements ProjectController {
       const response = await this.projectService.getResultById(projetCred);
 
       if (response !== undefined) {
-        return res.status(200).send(Helper.ResponseData(200, 'Get result success', null, response));
+        return res.status(200).send(Helper.ResponseData(200, 'Get result success', false, response));
       }
 
-      return res.status(404).send(Helper.ResponseData(404, 'Get result failed', null, null));
+      return res.status(404).send(Helper.ResponseData(404, 'Get result failed', true, null));
     } catch (error: any) {
-      return res.status(500).send(Helper.ResponseData(500, 'Get result failed', null, error));
+      return res.status(500).send(Helper.ResponseData(500, 'Get result failed', true, error));
     }
   }
 
@@ -100,12 +100,12 @@ class ProjectControllerImpl implements ProjectController {
       const response = await this.projectService.getProjects(user_id);
 
       if (response !== undefined) {
-        return res.status(200).send(Helper.ResponseData(200, 'Get projects success', null, response));
+        return res.status(200).send(Helper.ResponseData(200, 'Get projects success', false, response));
       }
 
-      return res.status(404).send(Helper.ResponseData(404, 'Get projects failed', null, null));
+      return res.status(404).send(Helper.ResponseData(404, 'Get projects failed', true, null));
     } catch (error: any) {
-      return res.status(500).send(Helper.ResponseData(500, 'Get projects failed', null, error));
+      return res.status(500).send(Helper.ResponseData(500, 'Get projects failed', true, error));
     }
   }
 
@@ -116,21 +116,21 @@ class ProjectControllerImpl implements ProjectController {
 
 
       if (response !== undefined) {
-        return res.status(200).send(Helper.ResponseData(200, 'Get results success', null, response));
+        return res.status(200).send(Helper.ResponseData(200, 'Get results success', false, response));
       }
 
-      return res.status(404).send(Helper.ResponseData(404, 'Get results failed', null, null));
+      return res.status(404).send(Helper.ResponseData(404, 'Get results failed', true, null));
 
 
     } catch(error: any) {
-      return res.status(500).send(Helper.ResponseData(500, 'Get results failed', null, error));
+      return res.status(500).send(Helper.ResponseData(500, 'Get results failed', true, error));
     }
   }
 
   async uploadImageProject(req: Request, res: Response): Promise<Response> { 
     try {
       if (!req.file) {
-        return res.status(400).send(Helper.ResponseData(400, 'No file uploaded', null, null));
+        return res.status(400).send(Helper.ResponseData(400, 'No file uploaded', true, null));
       }
 
       const response = await this.projectService.uploadImageProject({
@@ -140,13 +140,13 @@ class ProjectControllerImpl implements ProjectController {
       });
 
       if (response !== undefined) {
-        return res.status(200).send(Helper.ResponseData(200, 'Upload image project success', null, response));
+        return res.status(200).send(Helper.ResponseData(200, 'Upload image project success', false, response));
       }
 
-      return res.status(500).send(Helper.ResponseData(500, 'Upload image project failed', null, null));
+      return res.status(500).send(Helper.ResponseData(500, 'Upload image project failed', true, null));
 
     } catch (error: any) {
-      return res.status(500).send(Helper.ResponseData(500, 'Upload image project failed', null, error));
+      return res.status(500).send(Helper.ResponseData(500, 'Upload image project failed', true, error));
     }
   }
 
@@ -160,17 +160,15 @@ class ProjectControllerImpl implements ProjectController {
       const response = await this.projectService.predictProject(predictData);
 
       if (!response) {
-        return res.status(500).send(Helper.ResponseData(500, 'Predict project failed', null, null));
+        return res.status(500).send(Helper.ResponseData(500, 'Predict project failed', true, null));
       }
 
-      return res.status(200).send(Helper.ResponseData(200, 'Predict project success', null, response));
+      return res.status(200).send(Helper.ResponseData(200, 'Predict project success', false, response));
 
     } catch (error: any) {
-      return res.status(500).send(Helper.ResponseData(500, 'Predict project failed', null, error));
+      return res.status(500).send(Helper.ResponseData(500, 'Predict project failed', true, error));
     }
-  }
-
-  
+  }  
 }
 
 export {

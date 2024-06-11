@@ -278,7 +278,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
 
       const datas = response.data;
       const imagesData = datas.images;
-
+      
       let downloadsUrls: string[] = [];
 
       const uploadPromises = Object.entries(imagesData).map(async ([filename, base64Data]) => {

@@ -42,7 +42,7 @@ class AuthControllerImpl {
     const data = {
       url: authorizationUrl,
     }
-    return res.status(200).send(Helper.ResponseData(200, USER_DTO.MESSAGE_REDIRECT, data, null));
+    return res.status(200).send(Helper.ResponseData(200, USER_DTO.MESSAGE_REDIRECT, false, data));
   }
 
   async googleLogin(req: Request, res: Response): Promise<Response | any> {
@@ -59,7 +59,7 @@ class AuthControllerImpl {
       const { data } = await oauth2.userinfo.get();
 
       if (!data.email || !data.name) {
-        return res.status(400).send(Helper.ResponseData(400, USER_DTO.MESSAGE_GET_USER_ERROR, null, null));
+        return res.status(400).send(Helper.ResponseData(400, USER_DTO.MESSAGE_GET_USER_ERROR, true, null));
       }
 
       // check data user in database mysql seauelize
@@ -85,7 +85,7 @@ class AuthControllerImpl {
       const updateToken = await this.userService.updateAccessToken(email, token);
 
       if (updateToken === undefined) {
-        return res.status(500).send(Helper.ResponseData(500, USER_DTO.MESSAGE_TOKEN_ERROR, null, null));
+        return res.status(500).send(Helper.ResponseData(500, USER_DTO.MESSAGE_TOKEN_ERROR, true, null));
       }
 
       const responseData = {
@@ -94,10 +94,10 @@ class AuthControllerImpl {
         user,
       };
 
-      return res.status(200).send(Helper.ResponseData(200, USER_DTO.MESSAGE_LOGIN_SUCCESS, responseData, null));
+      return res.status(200).send(Helper.ResponseData(200, USER_DTO.MESSAGE_LOGIN_SUCCESS, false, responseData));
 
     } catch (error: any) {
-      return res.status(500).send(Helper.ResponseData(500, error.message, null, error));
+      return res.status(500).send(Helper.ResponseData(500, error.message, true, error));
     }
   }
 }
