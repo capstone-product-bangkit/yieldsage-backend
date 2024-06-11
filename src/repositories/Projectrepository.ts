@@ -18,7 +18,9 @@ dotenv.config();
 interface ProjectRepository {
   createProject(project: ProjectEntity): Promise<ProjectEntity | undefined> ;
   getProjectById(projectCred: GetProjectbyID): Promise<ProjectEntity | undefined> ;
+  getResultById(projectCred: GetProjectbyID): Promise<ProjectEntity | undefined> ;
   getProjects(user_id: string): Promise<Array<ProjectEntity> | undefined>;
+  getResults(user_id: string): Promise<Array<ProjectEntity> | undefined>;
   uploadImageProject(imageCred: UploadImageProject): Promise<ProjectEntity | undefined>;
   predictProject(projectCred: GetProjectbyID): Promise<ProjectEntity | any | undefined>;
 }
@@ -97,6 +99,30 @@ class ProjectRepositoryImpl implements ProjectRepository {
     }
   }
 
+  async getResultById(projectCred: GetProjectbyID): Promise<ProjectEntity | undefined> {
+    try {
+      if (!projectCred.id || !projectCred.user_id) {
+        return undefined;
+      }
+  
+      const projectsRef = collection(this.db, 'prediction');
+      const queryRef = query(projectsRef, 
+                             where('id', '==', projectCred.id), 
+                             where('user_id', '==', projectCred.user_id));
+      const querySnapshot = await getDocs(queryRef);
+  
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];  // Assuming id and user_id are unique and only one document will match
+        const data = doc.data();
+        return new ProjectEntity(data.id, data.user_id, data.name, data.description, data.image_content);
+      }
+  
+      return undefined;
+    } catch (error: any) {
+      return undefined;
+    }
+  }
+
   async getProjects(user_id: string): Promise<Array<ProjectEntity> | undefined> {
     try {
       if (!user_id) {
@@ -104,6 +130,30 @@ class ProjectRepositoryImpl implements ProjectRepository {
       }
   
       const projectsRef = collection(this.db, 'projects');
+      const queryRef = query(projectsRef, where('user_id', '==', user_id));
+      const querySnapshot = await getDocs(queryRef);
+      const projects: Array<ProjectEntity> = [];
+  
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        projects.push(new ProjectEntity(data.id, data.user_id, data.name, data.description, data.image_content));
+      });
+  
+      return projects;
+    } catch (error: any) {
+      return undefined;
+    }
+  }
+
+  async getResults(user_id: string): Promise<Array<ProjectEntity> | undefined> {
+    try {
+      if (!user_id) {
+        return undefined;
+      }
+
+      console.log("Getting results...", user_id);
+  
+      const projectsRef = collection(this.db, 'prediction');
       const queryRef = query(projectsRef, where('user_id', '==', user_id));
       const querySnapshot = await getDocs(queryRef);
       const projects: Array<ProjectEntity> = [];
@@ -183,8 +233,6 @@ class ProjectRepositoryImpl implements ProjectRepository {
         image_content: transformImageContent,
       };
 
-      console.log(projectData);
-
       // Query to find the document by id and user_id
       const projectsRef = collection(this.db, 'projects');
       const queryRef = query(projectsRef, where('id', '==', project.id), where('user_id', '==', project.user_id));
@@ -227,7 +275,6 @@ class ProjectRepositoryImpl implements ProjectRepository {
         imageUrls: imageUrls
       }); 
 
-      console.log("Response from Flask API:", response.data);
 
       const datas = response.data;
       const imagesData = datas.images;
@@ -271,7 +318,6 @@ class ProjectRepositoryImpl implements ProjectRepository {
         };
       });
 
-      console.log("Project Data:", projectDatas);
 
       const predictionRef = collection(this.db, 'prediction');
 

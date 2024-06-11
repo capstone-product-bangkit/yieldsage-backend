@@ -7,7 +7,9 @@ import { v4 as uuidv4 } from 'uuid';
 interface ProjectService { 
   createProject(project: ProjectRequest): Promise<ProjectResponse | undefined>;
   getProjectById(projectCred: GetProjectbyID): Promise<ProjectResponse | undefined>;
+  getResultById(projectCred: GetProjectbyID): Promise<ProjectResponse | undefined>;
   getProjects(user_id: string): Promise<Array<ProjectResponse> | undefined>;
+  getResults(user_id: string): Promise<Array<ProjectResponse> | undefined>;
   uploadImageProject(imageCred: UploadImageProject): Promise<ProjectResponse | undefined>;
   predictProject(projectCred: GetProjectbyID): Promise<ProjectResponse | any | undefined>;
 }
@@ -38,8 +40,24 @@ class ProjectServiceImpl implements ProjectService{
     return undefined;
   }
 
+  async getResultById(projectCred: GetProjectbyID): Promise<ProjectResponse | undefined> {
+    const project = await this.projectRepository.getResultById(projectCred);
+    if (project) {
+      return new ProjectResponse(project.id, project.user_id, project.name, project.description, project.image_content);
+    }
+    return undefined;
+  }
+
   async getProjects(user_id: string): Promise<Array<ProjectResponse> | undefined> { 
     const projects = await this.projectRepository.getProjects(user_id);
+    if (projects) {
+      return projects.map(project => new ProjectResponse(project.id, project.user_id, project.name, project.description, project.image_content));
+    }
+    return undefined;
+  }
+
+  async getResults(user_id: string): Promise<Array<ProjectResponse> | undefined> {
+    const projects = await this.projectRepository.getResults(user_id);
     if (projects) {
       return projects.map(project => new ProjectResponse(project.id, project.user_id, project.name, project.description, project.image_content));
     }

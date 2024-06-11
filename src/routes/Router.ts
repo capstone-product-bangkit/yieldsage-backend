@@ -46,6 +46,8 @@ router.post("/login", userController.login.bind(userController));
 router.get("/me", AuthenticateJwt, userController.getMe.bind(userController));
 
 // projects
+router.get('/projects/result', AuthenticateJwt, projectController.getResults.bind(projectController));
+router.get('/projects/result/:id', AuthenticateJwt, projectController.getResultById.bind(projectController));
 router.post("/projects", AuthenticateJwt, projectController.createProject.bind(projectController));
 router.get("/projects/:id", AuthenticateJwt, projectController.getProjectById.bind(projectController));
 router.get("/projects", AuthenticateJwt, projectController.getProjects.bind(projectController));

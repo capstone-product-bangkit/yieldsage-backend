@@ -15,6 +15,8 @@ interface ProjectController {
   createProject(project: Request, res: Response): Promise<Response>;
   getProjectById(req: Request, res: Response): Promise<Response>;
   getProjects(req: Request, res: Response): Promise<Response>;
+  getResults(req: Request, res: Response): Promise<Response>;
+  getResultById(req: Request, res: Response): Promise<Response>;
   uploadImageProject(req: Request, res: Response): Promise<Response>;
   predictProject(req: Request, res: Response): Promise<Response>;
 }
@@ -70,6 +72,28 @@ class ProjectControllerImpl implements ProjectController {
     }
   }
 
+  async getResultById(req: Request, res: Response): Promise<Response> {
+    try {
+      const id: string = req.params.id as string;
+
+      if (!id) {
+        return res.status(400).send(Helper.ResponseData(400, 'Result id is required!', null, null));
+      }
+
+      const projetCred = new GetProjectbyID(id, res.locals.user.user_id);
+
+      const response = await this.projectService.getResultById(projetCred);
+
+      if (response !== undefined) {
+        return res.status(200).send(Helper.ResponseData(200, 'Get result success', null, response));
+      }
+
+      return res.status(404).send(Helper.ResponseData(404, 'Get result failed', null, null));
+    } catch (error: any) {
+      return res.status(500).send(Helper.ResponseData(500, 'Get result failed', null, error));
+    }
+  }
+
   async getProjects(req: Request, res: Response): Promise<Response> {
     try {
       const user_id: string = res.locals.user.user_id;  
@@ -82,6 +106,24 @@ class ProjectControllerImpl implements ProjectController {
       return res.status(404).send(Helper.ResponseData(404, 'Get projects failed', null, null));
     } catch (error: any) {
       return res.status(500).send(Helper.ResponseData(500, 'Get projects failed', null, error));
+    }
+  }
+
+  async getResults(req: Request, res: Response): Promise<Response> {
+    try {
+      const user_id: string = res.locals.user.user_id;
+      const response = await this.projectService.getResults(user_id);
+
+
+      if (response !== undefined) {
+        return res.status(200).send(Helper.ResponseData(200, 'Get results success', null, response));
+      }
+
+      return res.status(404).send(Helper.ResponseData(404, 'Get results failed', null, null));
+
+
+    } catch(error: any) {
+      return res.status(500).send(Helper.ResponseData(500, 'Get results failed', null, error));
     }
   }
 
@@ -127,6 +169,8 @@ class ProjectControllerImpl implements ProjectController {
       return res.status(500).send(Helper.ResponseData(500, 'Predict project failed', null, error));
     }
   }
+
+  
 }
 
 export {
