@@ -47,12 +47,14 @@ router.get("/me", AuthenticateJwt, userController.getMe.bind(userController));
 
 // projects
 router.get('/projects/result', AuthenticateJwt, projectController.getResults.bind(projectController));
+router.get('/projects/ndvi-mapping', AuthenticateJwt, projectController.getAllNDVIMapping.bind(projectController));
 router.get('/projects/result/:id', AuthenticateJwt, projectController.getResultById.bind(projectController));
-router.post("/projects", AuthenticateJwt, projectController.createProject.bind(projectController));
 router.get("/projects/:id", AuthenticateJwt, projectController.getProjectById.bind(projectController));
-router.get("/projects", AuthenticateJwt, projectController.getProjects.bind(projectController));
 router.post('/projects/upload/:id', AuthenticateJwt, upload.single('image'), projectController.uploadImageProject.bind(projectController));
 router.post('/projects/predict/:id', AuthenticateJwt, projectController.predictProject.bind(projectController));
+router.post('/projects/ndvi-mapping', AuthenticateJwt, upload.array('images', 2) ,projectController.calculateNDVIMapping.bind(projectController));
+router.post("/projects", AuthenticateJwt, projectController.createProject.bind(projectController));
+router.get("/projects", AuthenticateJwt, projectController.getProjects.bind(projectController));
 
 // route exception for all method for route not found
 router.all("*", (req: Request, res: Response) => {

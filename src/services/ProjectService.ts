@@ -1,4 +1,4 @@
-import { GetProjectbyID, ProjectRequest, ProjectResponse, UploadImageProject } from "../dto/ProjectDto";
+import { GetProjectbyID, NDVIImage, NDVIMappingResponse, ProjectRequest, ProjectResponse, UploadImageProject } from "../dto/ProjectDto";
 import { ProjectEntity } from "../entities/ProjectEntity";
 import { ProjectRepository } from "../repositories/Projectrepository";
 import { v4 as uuidv4 } from 'uuid';
@@ -12,6 +12,8 @@ interface ProjectService {
   getResults(user_id: string): Promise<Array<ProjectResponse> | undefined>;
   uploadImageProject(imageCred: UploadImageProject): Promise<ProjectResponse | undefined>;
   predictProject(projectCred: GetProjectbyID): Promise<ProjectResponse | any | undefined>;
+  calculateNDVIMapping(ndviImage: NDVIImage): Promise<NDVIMappingResponse | any | undefined>;
+  getAllNDVIMapping(user_id: string): Promise<Array<NDVIMappingResponse> | undefined>;
 }
 
 class ProjectServiceImpl implements ProjectService{
@@ -84,6 +86,26 @@ class ProjectServiceImpl implements ProjectService{
     } catch (error: any) {
       return undefined;
     }
+  }
+
+  async calculateNDVIMapping(ndviImage: NDVIImage): Promise<NDVIMappingResponse | any | undefined> {
+    try {
+      const ndviMapping = await this.projectRepository.calculateNDVIMappintg(ndviImage);
+      if (!ndviMapping) {
+        return undefined;
+      }
+      return ndviMapping;
+    } catch (error: any) {
+      return undefined;
+    }
+  }
+
+  async getAllNDVIMapping(user_id: string): Promise<Array<NDVIMappingResponse> | undefined> {
+    const ndviMapping = await this.projectRepository.getAllNDVIMapping(user_id);
+    if (ndviMapping) {
+      return ndviMapping.map(ndvi => new NDVIMappingResponse(ndvi.id, ndvi.user_id, ndvi.red_image, ndvi.nir_image, ndvi.ndvi_image, ndvi.average_ndvi, ndvi.health_status));
+    }
+    return undefined;
   }
 }
 

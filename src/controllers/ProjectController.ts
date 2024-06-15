@@ -1,15 +1,12 @@
 import { Request, Response } from "express";
 import { ProjectService } from "../services/ProjectService";
-import { GetProjectbyID, ProjectRequest } from "../dto/ProjectDto";
+import { GetProjectbyID, NDVIImage, ProjectRequest } from "../dto/ProjectDto";
 import Helper from "../helpers/Helper";
 import multer from "multer";
 import { FirebaseStorage } from "firebase/storage";
 import firebaseConn from "../config/dbConnect";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { v4 as uuidv4 } from 'uuid';
-
-
-
 
 interface ProjectController {
   createProject(project: Request, res: Response): Promise<Response>;
@@ -19,6 +16,8 @@ interface ProjectController {
   getResultById(req: Request, res: Response): Promise<Response>;
   uploadImageProject(req: Request, res: Response): Promise<Response>;
   predictProject(req: Request, res: Response): Promise<Response>;
+  calculateNDVIMapping(req: Request, res: Response): Promise<Response>;
+  getAllNDVIMapping(req: Request, res: Response): Promise<Response>;
 }
 
 class ProjectControllerImpl implements ProjectController {
@@ -169,6 +168,49 @@ class ProjectControllerImpl implements ProjectController {
       return res.status(500).send(Helper.ResponseData(500, 'Predict project failed', true, error));
     }
   }  
+
+  async calculateNDVIMapping(req: Request, res: Response): Promise<Response> {
+    try {
+      if (req.files?.length !== 2) { 
+        return res.status(400).send(Helper.ResponseData(400, 'Please upload 2 images', true, null));
+      }
+      const files = req.files as Express.Multer.File[];
+      const user_id = res.locals.user.user_id;
+      const red_image = files[0];
+      const nir_image = files[1];
+
+      const ndviData = new NDVIImage(user_id, red_image, nir_image);
+
+      const response = await this.projectService.calculateNDVIMapping(ndviData);
+
+      if (!response) {
+        return res.status(500).send(Helper.ResponseData(500, 'Calculate NDVI Mapping failed', true, null));
+      }
+
+      return res.status(200).send(Helper.ResponseData(200, 'Calculate NDVI Mapping success', false, response));
+
+    } catch (error: any) {
+      return res.status(500).send(Helper.ResponseData(500, 'Calculate NDVI Mapping failed', true, error));
+    }
+  
+  }
+
+  async getAllNDVIMapping(req: Request, res: Response): Promise<Response> {
+    try {
+      const user_id = res.locals.user.user_id;
+      const response = await this.projectService.getAllNDVIMapping(user_id);
+
+      if (!response) {
+        return res.status(500).send(Helper.ResponseData(500, 'Get all NDVI Mapping failed', true, null));
+      }
+
+      return res.status(200).send(Helper.ResponseData(200, 'Get all NDVI Mapping success', false, response));
+
+    } catch (error: any) {
+      return res.status(500).send(Helper.ResponseData(500, 'Get all NDVI Mapping failed', true, error));
+    }
+  
+  }
 }
 
 export {

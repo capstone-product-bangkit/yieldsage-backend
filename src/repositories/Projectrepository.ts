@@ -1,7 +1,7 @@
-import { ProjectEntity } from "../entities/ProjectEntity";
+import { NDVIMappingEntitiy, ProjectEntity } from "../entities/ProjectEntity";
 import { addDoc, collection, Firestore, getDoc, doc, getDocs, query, where, setDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
-import { GetProjectbyID, UploadImageProject, ProjectData, ProjectImageContent } from "../dto/ProjectDto";
+import { GetProjectbyID, UploadImageProject, ProjectData, ProjectImageContent, NDVIImage } from "../dto/ProjectDto";
 import { ProjectImageContentEntity } from "../entities/ProjectImageContentEntity";
 import axios from "axios";
 import firebaseConn from "../config/dbConnect";
@@ -23,6 +23,8 @@ interface ProjectRepository {
   getResults(user_id: string): Promise<Array<ProjectEntity> | undefined>;
   uploadImageProject(imageCred: UploadImageProject): Promise<ProjectEntity | undefined>;
   predictProject(projectCred: GetProjectbyID): Promise<ProjectEntity | any | undefined>;
+  calculateNDVIMappintg(ndviImage: NDVIImage): Promise<NDVIMappingEntitiy | undefined>;
+  getAllNDVIMapping(user_id: string): Promise<Array<NDVIMappingEntitiy> | undefined>;
 }
 
 class ProjectRepositoryImpl implements ProjectRepository {
@@ -340,6 +342,111 @@ class ProjectRepositoryImpl implements ProjectRepository {
 
       return undefined;
   
+    } catch (error: any) {
+      return undefined;
+    }
+  
+  }
+
+  async calculateNDVIMappintg(ndviImage: NDVIImage): Promise<NDVIMappingEntitiy | undefined> {
+    try {
+      if (!ndviImage.red_image || !ndviImage.nir_image) {
+        return undefined;
+      }
+
+      const redImageFile = ndviImage.red_image;
+      const nirImageFile = ndviImage.nir_image;
+      const redStorageRef = ref(this.storageInstace, `red_images/${uuidv4()}_${redImageFile.originalname}`);
+      const nirStorageRef = ref(this.storageInstace, `nir_images/${uuidv4()}_${nirImageFile.originalname}`);
+
+      await uploadBytes(redStorageRef, redImageFile.buffer, {
+        contentType: redImageFile.mimetype
+      });
+      
+      await uploadBytes(nirStorageRef, nirImageFile.buffer, {
+        contentType: nirImageFile.mimetype
+      });
+
+      const redPublicUrl = await getDownloadURL(redStorageRef);
+      const nirPublicUrl = await getDownloadURL(nirStorageRef);
+
+      if (!redPublicUrl || !nirPublicUrl) {
+        return undefined;
+      }
+
+      console.log("Predicting...", process.env.FLASK_URL);
+
+      const response = await axios.post(`${process.env.FLASK_URL}/calculate-ndvi`, {
+        imageUrls: [nirPublicUrl, redPublicUrl]
+      }); 
+
+      if (!response) {
+        return undefined;
+      }
+
+      const data = response.data;
+      
+      if(!data) {
+        return undefined;
+      }
+
+      const base64Data = data.ndvi_image;
+      const buffer = Buffer.from(base64Data as string, 'base64');
+      const storageRef = ref(this.storageInstace, `ndvi_images/${uuidv4()}_ndvi_image.tif`);
+
+      await uploadBytes(storageRef, buffer, {
+        contentType: 'image/tiff'
+      });
+
+      const ndviPublicUrl = await getDownloadURL(storageRef);
+
+      if (!ndviPublicUrl) {
+        return undefined;
+      }
+
+      const ndviMappingData = {
+        id: uuidv4(),
+        user_id: ndviImage.user_id,
+        red_image: redPublicUrl,
+        nir_image: nirPublicUrl,
+        ndvi_image: ndviPublicUrl,
+        average_ndvi: data.average_ndvi,
+        health_status: data.health_status,
+      };  
+
+      const docRef = await addDoc(collection(this.db, 'ndvi_mapping'), ndviMappingData);
+
+      const docSnapshot = await getDoc(docRef);
+
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        return new NDVIMappingEntitiy(data.id, data.user_id, data.red_image, data.nir_image, data.ndvi_image, data.average_ndvi, data.health_status);
+      }
+
+      return undefined;
+
+    } catch (error: any) {
+      return undefined;
+    }
+  }
+
+  async getAllNDVIMapping(user_id: string): Promise<Array<NDVIMappingEntitiy> | undefined> {
+    try {
+      if (!user_id) {
+        return undefined;
+      }
+
+      const ndviMappingRef = collection(this.db, 'ndvi_mapping');
+      const queryRef = query(ndviMappingRef, where('user_id', '==', user_id));
+      const querySnapshot = await getDocs(queryRef);
+      const ndviMappings: Array<NDVIMappingEntitiy> = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        ndviMappings.push(new NDVIMappingEntitiy(data.id, data.user_id, data.red_image, data.nir_image, data.ndvi_image, data.average_ndvi, data.health_status));
+      });
+
+      return ndviMappings;
     } catch (error: any) {
       return undefined;
     }
