@@ -116,6 +116,7 @@ class UserControllerImpl implements UserController {
       {
         name: check.name,
         email: check.email,
+        phone_number: check.phone_number,
       };
 
       return res.status(200).send(Helper.ResponseData(200, USER_DTO.MESSAGE_GET_USER_SUCCESS, false, responseData));
