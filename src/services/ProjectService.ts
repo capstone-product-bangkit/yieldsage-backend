@@ -1,4 +1,4 @@
-import { GetProjectbyID, NDVIImage, NDVIMappingResponse, ProjectRequest, ProjectResponse, UploadImageProject } from "../dto/ProjectDto";
+import { GetProjectbyID, NDVIImage, NDVIMappingResponse, PredictionResponse, ProjectRequest, ProjectResponse, UploadImageProject } from "../dto/ProjectDto";
 import { ProjectEntity } from "../entities/ProjectEntity";
 import { ProjectRepository } from "../repositories/Projectrepository";
 import { v4 as uuidv4 } from 'uuid';
@@ -45,7 +45,7 @@ class ProjectServiceImpl implements ProjectService{
   async getResultById(projectCred: GetProjectbyID): Promise<ProjectResponse | undefined> {
     const project = await this.projectRepository.getResultById(projectCred);
     if (project) {
-      return new ProjectResponse(project.id, project.user_id, project.name, project.description, project.image_content);
+      return new PredictionResponse(project.id, project.user_id, project.name, project.description, project.image_content, project.age_average, project.tree_count, project.cpa_average, project.total_yield);
     }
     return undefined;
   }

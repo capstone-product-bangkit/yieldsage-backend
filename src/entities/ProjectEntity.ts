@@ -19,6 +19,31 @@ class ProjectEntity {
   }
 }
 
+class PredictionEntity {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string;
+  image_content: Array<ProjectImageContent> | [];
+  age_average: number;
+  tree_count: number;
+  cpa_average: number;
+  total_yield: number;
+
+  constructor(id: string, user_id: string, name: string, description: string, image_content: Array<ProjectImageContent> | [], age_average: number, tree_count: number, cpa_average: number, total_yield: number) {
+    this.id = id;
+    this.user_id = user_id;
+    this.name = name;
+    this.description = description;
+    this.image_content = image_content;
+    this.age_average = age_average;
+    this.tree_count = tree_count;
+    this.cpa_average = cpa_average;
+    this.total_yield = total_yield;
+  }
+  
+}
+
 class NDVIMappingEntitiy {
   id: string;
   user_id: string;
@@ -41,5 +66,6 @@ class NDVIMappingEntitiy {
 
 export {
   ProjectEntity,
-  NDVIMappingEntitiy
+  NDVIMappingEntitiy,
+  PredictionEntity
 }

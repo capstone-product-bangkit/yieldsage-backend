@@ -1,4 +1,4 @@
-import { NDVIMappingEntitiy, ProjectEntity } from "../entities/ProjectEntity";
+import { NDVIMappingEntitiy, PredictionEntity, ProjectEntity } from "../entities/ProjectEntity";
 import { addDoc, collection, Firestore, getDoc, doc, getDocs, query, where, setDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
 import { GetProjectbyID, UploadImageProject, ProjectData, ProjectImageContent, NDVIImage } from "../dto/ProjectDto";
@@ -18,9 +18,9 @@ dotenv.config();
 interface ProjectRepository {
   createProject(project: ProjectEntity): Promise<ProjectEntity | undefined> ;
   getProjectById(projectCred: GetProjectbyID): Promise<ProjectEntity | undefined> ;
-  getResultById(projectCred: GetProjectbyID): Promise<ProjectEntity | undefined> ;
+  getResultById(projectCred: GetProjectbyID): Promise<PredictionEntity | undefined> ;
   getProjects(user_id: string): Promise<Array<ProjectEntity> | undefined>;
-  getResults(user_id: string): Promise<Array<ProjectEntity> | undefined>;
+  getResults(user_id: string): Promise<Array<PredictionEntity> | undefined>;
   uploadImageProject(imageCred: UploadImageProject): Promise<ProjectEntity | undefined>;
   predictProject(projectCred: GetProjectbyID): Promise<ProjectEntity | any | undefined>;
   calculateNDVIMappintg(ndviImage: NDVIImage): Promise<NDVIMappingEntitiy | undefined>;
@@ -101,7 +101,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
     }
   }
 
-  async getResultById(projectCred: GetProjectbyID): Promise<ProjectEntity | undefined> {
+  async getResultById(projectCred: GetProjectbyID): Promise<PredictionEntity | undefined> {
     try {
       if (!projectCred.id || !projectCred.user_id) {
         return undefined;
@@ -113,10 +113,25 @@ class ProjectRepositoryImpl implements ProjectRepository {
                              where('user_id', '==', projectCred.user_id));
       const querySnapshot = await getDocs(queryRef);
   
+      let tree_count = 0;
+      let age_average = 0;
+      let cpa_average = 0;
+      let total_yield = 0;
       if (!querySnapshot.empty) {
         const doc = querySnapshot.docs[0];  // Assuming id and user_id are unique and only one document will match
         const data = doc.data();
-        return new ProjectEntity(data.id, data.user_id, data.name, data.description, data.image_content);
+
+        data.image_content.forEach((image: ProjectImageContentEntity) => {
+          tree_count += image.tree_count!;
+          age_average += image.age_average!;
+          cpa_average += image.cpa_average!;
+          total_yield += image.total_yield!;
+        });
+
+        age_average = age_average / data.image_content.length;
+        cpa_average = cpa_average / data.image_content.length;
+
+        return new PredictionEntity(data.id, data.user_id, data.name, data.description, data.image_content, age_average, tree_count, cpa_average, total_yield);
       }
   
       return undefined;
@@ -147,7 +162,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
     }
   }
 
-  async getResults(user_id: string): Promise<Array<ProjectEntity> | undefined> {
+  async getResults(user_id: string): Promise<Array<PredictionEntity> | undefined> {
     try {
       if (!user_id) {
         return undefined;
@@ -158,11 +173,24 @@ class ProjectRepositoryImpl implements ProjectRepository {
       const projectsRef = collection(this.db, 'prediction');
       const queryRef = query(projectsRef, where('user_id', '==', user_id));
       const querySnapshot = await getDocs(queryRef);
-      const projects: Array<ProjectEntity> = [];
+      const projects: Array<PredictionEntity> = [];
   
+      let tree_count = 0;
+      let age_average = 0;
+      let cpa_average = 0;
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        projects.push(new ProjectEntity(data.id, data.user_id, data.name, data.description, data.image_content));
+
+        data.image_content.forEach((image: ProjectImageContentEntity) => {
+          tree_count += image.tree_count!;
+          age_average += image.age_average!;
+          cpa_average += image.cpa_average!;
+        });
+
+        age_average = age_average / data.image_content.length;
+        cpa_average = cpa_average / data.image_content.length;
+
+        projects.push(new PredictionEntity(data.id, data.user_id, data.name, data.description, data.image_content, age_average, tree_count, cpa_average, data.total_yield!));
       });
   
       return projects;

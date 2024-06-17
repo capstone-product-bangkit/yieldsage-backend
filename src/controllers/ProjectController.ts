@@ -83,6 +83,7 @@ class ProjectControllerImpl implements ProjectController {
 
       const response = await this.projectService.getResultById(projetCred);
 
+
       if (response !== undefined) {
         return res.status(200).send(Helper.ResponseData(200, 'Get result success', false, response));
       }
