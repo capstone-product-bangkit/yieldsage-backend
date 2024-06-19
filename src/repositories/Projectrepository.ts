@@ -307,6 +307,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
 
 
       const datas = response.data;
+
       const imagesData = datas.images;
       
       let downloadsUrls: string[] = [];
@@ -315,13 +316,16 @@ class ProjectRepositoryImpl implements ProjectRepository {
         const buffer = Buffer.from(base64Data as string, 'base64');
         const storageRef = ref(this.storageInstace, `images/${uuidv4()}_${filename}`);
         
+        
         await uploadBytes(storageRef, buffer, {
           contentType: 'image/png'
         });
 
         const publicUrl = await getDownloadURL(storageRef);
+
         downloadsUrls.push(publicUrl);
       });
+      
 
       await Promise.all(uploadPromises);
 
@@ -335,6 +339,20 @@ class ProjectRepositoryImpl implements ProjectRepository {
         const cpa_average = yieldCalculation.calculateCPAAverage();
         const yield_individual = yieldCalculation.calculateIndividialYield();
 
+        if (!downloadsUrls[index]) { 
+          return {
+            id: uuidv4(),
+            total_yield: total_yield,
+            age_average: age_average,
+            cpa_average: cpa_average,
+            yield_individual: yield_individual,
+            age_individual: age_individual,
+            cpa_individual: datas.predictionResults[index],
+            tree_count: treeCount,
+            imageUrl: downloadsUrls[0],
+          };
+        }
+
         return {
           id: uuidv4(),
           total_yield: total_yield,
@@ -347,6 +365,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
           imageUrl: downloadsUrls[index],
         };
       });
+
 
 
       const predictionRef = collection(this.db, 'prediction');
